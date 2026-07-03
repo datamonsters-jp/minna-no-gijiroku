@@ -35,6 +35,8 @@ SITE_DESC = (
     "議題・一般質問・議案の結果を紹介する非公式サイトです。"
 )
 ASSETS_SRC = Path(__file__).resolve().parent.parent / "assets_src"
+PAGES_SRC = Path(__file__).resolve().parent.parent / "pages_src"
+BUDGET_DIR = Path(__file__).resolve().parent.parent / "data" / "budget"
 DISCLAIMER = (
     "本サイトは公式の会議録PDFをAIが要約した非公式サイトです。"
     "正確な内容は必ず原文の会議録をご確認ください。"
@@ -178,7 +180,7 @@ def page(title: str, body: str, root: str = ".", active: str = "",
     <span class="logo">議</span>
     <span class="brand-text"><span class="brand-title">{SITE_TITLE}</span><span class="brand-sub">{SITE_SUB}</span></span>
   </a>
-  <nav><a href="{root}/index.html"{nav_home}>ホーム</a><a href="{root}/search.html"{nav_search}>一般質問をさがす</a></nav>
+  <nav><a href="{root}/index.html"{nav_home}>ホーム</a><a href="{root}/search.html"{nav_search}>一般質問をさがす</a><a href="{root}/budget.html">予算のながれ</a></nav>
 </header>
 <main>
 {body}
@@ -257,6 +259,17 @@ def build_top(sessions) -> str:
   <h2>よく議論されているテーマ</h2>
   <p class="section-lead">各会期の頻出キーワードから集計しています。</p>
   <div class="panel">{theme_rows}</div>
+</section>
+<section>
+  <h2>予算をながめる</h2>
+  <a class="card budget-card" href="budget.html">
+    <div class="budget-icon">¥</div>
+    <div class="session-card-body">
+      <h3>令和8年度当初予算 お金の流れ</h3>
+      <p class="card-meta">総額171億5,000万円が「どこから入って、何に使われるのか」を1枚の図で。各項目のやさしい解説つき</p>
+    </div>
+    <span class="chevron">›</span>
+  </a>
 </section>
 <section>
   <h2>これまでの議会</h2>"""]
@@ -557,6 +570,15 @@ h3 { font-size: 1.12rem; margin: 1.8rem 0 0.8rem; }
 .card-meta { color: var(--muted); font-size: 0.9rem; margin: 0; }
 .chevron { color: #C4B8A8; font-size: 1.6rem; }
 
+.budget-card { border-width: 2px; border-color: var(--orange); }
+.budget-icon {
+  flex: none; width: 56px; height: 56px; border-radius: 12px;
+  background: var(--orange); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.7rem; font-weight: 700;
+  font-family: "Zen Maru Gothic", sans-serif;
+}
+
 .datebox {
   flex: none; width: 56px; height: 56px; border-radius: 12px;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -680,6 +702,14 @@ def main() -> int:
         for asset in ASSETS_SRC.iterdir():
             if asset.is_file() and not asset.name.startswith("."):
                 shutil.copy2(asset, OUT_DIR / "assets" / asset.name)
+    # 手書きの単体ページ（予算サンキー図など）と予算データをコピー
+    if PAGES_SRC.exists():
+        for page_file in PAGES_SRC.glob("*.html"):
+            shutil.copy2(page_file, OUT_DIR / page_file.name)
+    if BUDGET_DIR.exists():
+        (OUT_DIR / "data" / "budget").mkdir(parents=True, exist_ok=True)
+        for jf in BUDGET_DIR.glob("*.json"):
+            shutil.copy2(jf, OUT_DIR / "data" / "budget" / jf.name)
     (OUT_DIR / "index.html").write_text(build_top(sessions), encoding="utf-8")
 
     for sess in sessions:

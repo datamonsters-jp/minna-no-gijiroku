@@ -142,6 +142,15 @@ h3 { font-size: 1.12rem; margin: 1.8rem 0 0.8rem; }
 .card-meta { color: var(--muted); font-size: 0.9rem; margin: 0; }
 .chevron { color: #C4B8A8; font-size: 1.6rem; }
 
+.budget-card { border-width: 2px; border-color: var(--orange); }
+.budget-icon {
+  flex: none; width: 56px; height: 56px; border-radius: 12px;
+  background: var(--orange); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.7rem; font-weight: 700;
+  font-family: "Zen Maru Gothic", sans-serif;
+}
+
 .datebox {
   flex: none; width: 56px; height: 56px; border-radius: 12px;
   display: flex; flex-direction: column; align-items: center; justify-content: center;

@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>予算のお金の流れ | みんなの議事録 周防大島町</title>
+<meta name="description" content="周防大島町の当初予算を、歳入から歳出までのお金の流れ（サンキー図）で紹介します。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --jishu: #B0392E;        /* 自主財源: 濃い赤 */
+  --izon: #E4756A;         /* 依存財源: 明るい赤 */
+  --navy: #1F3557;         /* 中央: 濃紺 */
+  --text: #2C2418;
+  --text-2: #6B5D4F;
+  --muted: #8C7B66;
+  --bg: #FEFCF7;
+  --card-border: #F0E8DC;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: "Noto Sans JP", "Hiragino Sans", Meiryo, sans-serif;
+  font-size: 16px; line-height: 1.8;
+}
+header.page-head { max-width: 1200px; margin: 0 auto; padding: 1.6rem 1.2rem 0; }
+h1 { font-family: "Zen Maru Gothic", sans-serif; font-size: 1.6rem; margin: 0 0 0.2rem; }
+.subtitle { color: var(--text-2); margin: 0; }
+.legend { display: flex; flex-wrap: wrap; gap: 0.5rem 1.2rem; margin: 0.8rem 0 0; padding: 0; list-style: none; font-size: 0.88rem; color: var(--text-2); }
+.legend .sw { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 5px; }
+.hint { color: var(--muted); font-size: 0.85rem; margin: 0.3rem 0 0; }
+
+#chart-wrap { max-width: 1200px; margin: 0 auto; padding: 0.5rem 1.2rem 0; position: relative; }
+#chart { position: relative; width: 100%; }
+#chart svg { display: block; width: 100%; height: auto; }
+.node-label {
+  position: absolute; font-size: 13px; line-height: 1.45; pointer-events: none;
+}
+.node-label .amt { color: var(--text-2); font-size: 12px; display: block; }
+.node-label.left { text-align: right; }
+.node-label.right { text-align: left; }
+.chip {
+  position: absolute; background: rgba(255,255,255,0.92); border: 1px solid var(--card-border);
+  border-radius: 8px; padding: 0.05rem 0.55rem; font-size: 12.5px; font-weight: 700;
+  white-space: nowrap; pointer-events: none; box-shadow: 0 1px 6px rgba(44,36,24,0.08);
+}
+#tooltip {
+  position: absolute; z-index: 5; display: none; max-width: 280px;
+  background: #fff; border: 1px solid var(--card-border); border-radius: 12px;
+  padding: 0.6rem 0.9rem; font-size: 0.85rem; line-height: 1.6;
+  box-shadow: 0 4px 20px rgba(44,36,24,0.15); pointer-events: none;
+}
+#tooltip h3 { margin: 0 0 0.2rem; font-size: 0.92rem; }
+#tooltip table { border-collapse: collapse; width: 100%; }
+#tooltip td { padding: 0.05rem 0; }
+#tooltip td:last-child { text-align: right; padding-left: 1em; white-space: nowrap; }
+#tooltip .tt-note { color: var(--muted); font-size: 0.78rem; margin: 0.3rem 0 0; }
+#tooltip .tt-desc {
+  margin: 0.35rem 0 0.2rem; padding-top: 0.35rem;
+  border-top: 1px dashed var(--card-border); color: var(--text-2);
+}
+
+footer.page-foot {
+  max-width: 1200px; margin: 1rem auto 0; padding: 1rem 1.2rem 2.5rem;
+  border-top: 1px solid var(--card-border); color: var(--text-2); font-size: 0.9rem;
+}
+footer.page-foot a { color: #C06828; }
+.error-box { max-width: 700px; margin: 2rem auto; padding: 1rem 1.4rem; background: #FFF3E8; border-radius: 12px; color: #8a4a12; }
+
+@media (max-width: 640px) {
+  body { font-size: 15px; }
+  h1 { font-size: 1.25rem; }
+  .node-label { font-size: 10.5px; line-height: 1.35; }
+  .node-label .amt { font-size: 9.5px; }
+  .chip { font-size: 10.5px; padding: 0 0.4rem; }
+}
+</style>
+</head>
+<body>
+<header class="page-head">
+  <h1 id="title">当初予算 お金の流れ</h1>
+  <p class="subtitle" id="subtitle"></p>
+  <ul class="legend">
+    <li><span class="sw" style="background:var(--jishu)"></span>自主財源（町が自力で集めるお金）</li>
+    <li><span class="sw" style="background:var(--izon)"></span>依存財源（国・県などから入るお金）</li>
+    <li><span class="sw" style="background:var(--navy)"></span>予算全体</li>
+    <li><span class="sw" style="background:#3E6FA3"></span>歳出（使いみち）</li>
+  </ul>
+  <p class="hint">各項目にマウスを乗せる（スマホはタップ）と金額の詳細が見られます。</p>
+</header>
+<div id="chart-wrap">
+  <div id="chart"></div>
+  <div id="tooltip" role="tooltip"></div>
+</div>
+<footer class="page-foot">
+  <p>出典: <a id="src-link" href="#" target="_blank" rel="noopener">周防大島町 令和8年度当初予算の概要（PDF）</a><br>
+  <span id="note" style="font-size:0.85rem;color:var(--muted)"></span></p>
+  <p><a href="index.html">← みんなの議事録 トップへ</a></p>
+</footer>
+
+<script>
+"use strict";
+
+/* ---------- ユーティリティ ---------- */
+const fmtMan = man => {
+  // 万円単位の整数 → 「12億7,905万円」
+  const oku = Math.floor(man / 10000), rest = man % 10000;
+  let s = "";
+  if (oku) s += oku.toLocaleString("ja-JP") + "億";
+  if (rest || !oku) s += rest.toLocaleString("ja-JP") + "万";
+  return s + "円";
+};
+const pct = (man, total) => (man / total * 100).toFixed(1) + "%";
+const esc = s => s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* 歳出の青系グラデーション（項目数ぶん濃→淡） */
+const blueScale = (i, n) => {
+  const t = n <= 1 ? 0 : i / (n - 1);
+  const from = [30, 74, 122], to = [122, 165, 204];   // #1E4A7A → #7AA5CC
+  const c = from.map((f, k) => Math.round(f + (to[k] - f) * t));
+  return `rgb(${c[0]},${c[1]},${c[2]})`;
+};
+
+/* ---------- 描画本体 ---------- */
+let BUDGET = null;
+const chart = document.getElementById("chart");
+const tooltip = document.getElementById("tooltip");
+let pinned = null;   // タップで固定表示中のノードkey
+
+function render() {
+  if (!BUDGET) return;
+  const total = BUDGET.meta.total_man;
+  const W = chart.clientWidth;
+  const narrow = W < 640;
+  const H = narrow ? 560 : 680;
+  const labelW = narrow ? Math.max(92, W * 0.26) : 200;
+  const barW = narrow ? 10 : 14;
+  const gap = narrow ? 5 : 7;
+  const padTop = 8, padBottom = 8;
+
+  // 列のx座標（左ラベル | 歳入 | 区分 | 合計 | 歳出 | 右ラベル）
+  const innerX0 = labelW + 4, innerX1 = W - labelW - 4 - barW;
+  const colX = [
+    innerX0,
+    innerX0 + (innerX1 - innerX0) * 0.36,
+    innerX0 + (innerX1 - innerX0) * 0.56,
+    innerX1,
+  ];
+
+  // ---- ノード構築（列ごと）
+  const revItems = BUDGET.revenue_groups.flatMap(g =>
+    g.items.map(it => ({ ...it, group: g.id })));
+  const groups = BUDGET.revenue_groups.map(g => ({
+    id: g.id, label: g.label, desc: g.desc,
+    man: g.items.reduce((s, it) => s + it.man, 0),
+  }));
+  const expItems = BUDGET.expenditure;
+
+  const columns = [
+    revItems.map((it, i) => ({
+      key: "rev" + i, label: it.label, man: it.man, desc: it.desc,
+      color: it.group === "jishu" ? getCss("--jishu") : getCss("--izon"),
+      labelSide: "left",
+    })),
+    groups.map(g => ({
+      key: "grp-" + g.id, label: g.label, man: g.man, desc: g.desc,
+      color: g.id === "jishu" ? getCss("--jishu") : getCss("--izon"),
+      chip: true,
+    })),
+    [{ key: "total", label: narrow ? "合計" : "歳入・歳出合計", man: total,
+       desc: "1年間に町に入るお金（歳入）と町が使うお金（歳出）の総額です。",
+       color: getCss("--navy"), chip: true }],
+    expItems.map((it, i) => ({
+      key: "exp" + i, label: it.label, man: it.man, desc: it.desc,
+      color: blueScale(i, expItems.length),
+      labelSide: "right", breakdown: it.breakdown || null,
+    })),
+  ];
+
+  // ---- 高さ計算（min高さつき比例配分）
+  const minH = narrow ? 4 : 6;
+  const usable = c => H - padTop - padBottom - gap * (c.length - 1);
+  columns.forEach(col => {
+    const u = usable(col);
+    let y = padTop;
+    col.forEach(n => {
+      n.h = Math.max(minH, n.man / total * u);
+      n.y = y;
+      y += n.h + gap;
+    });
+  });
+
+  // ---- リンク構築（値の大きい順に上から詰める。列の並び順どおり）
+  const nodeBy = {};
+  columns.flat().forEach(n => (nodeBy[n.key] = n));
+  const links = [];
+  // 歳入項目 → 区分
+  revItems.forEach((it, i) => links.push({ s: "rev" + i, t: "grp-" + it.group, man: it.man,
+    color: nodeBy["rev" + i].color }));
+  // 区分 → 合計
+  groups.forEach(g => links.push({ s: "grp-" + g.id, t: "total", man: g.man,
+    color: nodeBy["grp-" + g.id].color }));
+  // 合計 → 歳出項目
+  expItems.forEach((it, i) => links.push({ s: "total", t: "exp" + i, man: it.man,
+    color: nodeBy["exp" + i].color }));
+
+  // 各ノードの流出/流入オフセット
+  const outOff = {}, inOff = {};
+  const scaleOf = n => n.h / n.man;   // ノードごとの縮尺（min高さ適用後）
+  links.forEach(l => {
+    const s = nodeBy[l.s], t = nodeBy[l.t];
+    l.sy = s.y + (outOff[l.s] = outOff[l.s] || 0);
+    l.sh = l.man * scaleOf(s);
+    outOff[l.s] += l.sh;
+    l.ty = t.y + (inOff[l.t] = inOff[l.t] || 0);
+    l.th = l.man * scaleOf(t);
+    inOff[l.t] += l.th;
+  });
+
+  // ---- SVG生成
+  const colOfKey = k => k.startsWith("rev") ? 0 : k.startsWith("grp") ? 1 : k === "total" ? 2 : 3;
+  const ribbons = links.map(l => {
+    const x0 = colX[colOfKey(l.s)] + barW, x1 = colX[colOfKey(l.t)];
+    const xm = (x0 + x1) / 2;
+    return `<path class="ribbon" data-key="${l.t.startsWith("exp") ? l.t : l.s}"
+      d="M${x0},${l.sy} C${xm},${l.sy} ${xm},${l.ty} ${x1},${l.ty}
+         L${x1},${l.ty + l.th} C${xm},${l.ty + l.th} ${xm},${l.sy + l.sh} ${x0},${l.sy + l.sh} Z"
+      fill="${l.color}" opacity="0.38"/>`;
+  }).join("");
+  const bars = columns.flat().map(n =>
+    `<rect data-key="${n.key}" x="${colX[colOfKey(n.key)]}" y="${n.y}" width="${barW}" height="${n.h}"
+       rx="2.5" fill="${n.color}" style="cursor:pointer"/>`).join("");
+
+  chart.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"
+     role="img" aria-label="予算のサンキー図">${ribbons}${bars}</svg>`;
+
+  // ---- HTMLラベル（折り返し可能）
+  const labels = [];
+  columns.flat().forEach(n => {
+    const cx = colX[colOfKey(n.key)];
+    if (n.chip) {
+      labels.push(`<div class="chip" data-chip="${n.key}" style="left:0;top:0">` +
+        `${esc(n.label)} ${pct(n.man, total)}</div>`);
+    } else if (n.labelSide) {
+      const left = n.labelSide === "left";
+      const style = left
+        ? `right:${W - cx + 6}px;`
+        : `left:${cx + barW + 6}px;`;
+      const showAmt = !narrow || n.man / total > 0.008;
+      labels.push(`<div class="node-label ${n.labelSide === "left" ? "left" : "right"}"
+        data-center="${n.y + n.h / 2}" data-side="${n.labelSide}"
+        style="${style}top:0;max-width:${labelW - 10}px">
+        <strong>${esc(n.label)}</strong> ${pct(n.man, total)}
+        ${showAmt ? `<span class="amt">${fmtMan(n.man)}</span>` : ""}</div>`);
+    }
+  });
+  chart.insertAdjacentHTML("beforeend", labels.join(""));
+  // ラベルの重なり回避: 各サイドで上から順に最低間隔を確保して押し下げる
+  ["left", "right"].forEach(side => {
+    const els = [...chart.querySelectorAll(`.node-label[data-side="${side}"]`)]
+      .sort((a, b) => +a.dataset.center - +b.dataset.center);
+    let cursor = 0;
+    els.forEach(el => {
+      const h = el.offsetHeight;
+      const top = Math.max(+el.dataset.center - h / 2, cursor);
+      el.style.top = top + "px";
+      cursor = top + h + 3;
+    });
+    // 下にはみ出したら全体を上に詰める
+    const overflow = cursor - 3 - H;
+    if (overflow > 0) {
+      let floor = H;
+      for (const el of els.reverse()) {
+        const top = Math.min(parseFloat(el.style.top), floor - el.offsetHeight);
+        el.style.top = Math.max(0, top) + "px";
+        floor = top - 3;
+      }
+    }
+  });
+  // チップの配置: 区分はバーの右、合計はバーの左（歳出ラベルとの重なり防止）
+  chart.querySelectorAll(".chip").forEach(chip => {
+    const n = nodeBy[chip.dataset.chip];
+    const cx = colX[colOfKey(n.key)];
+    const left = n.key === "total"
+      ? cx - chip.offsetWidth - 6
+      : Math.min(cx + barW + 6, colX[3] - chip.offsetWidth - 4);
+    chip.style.left = Math.max(4, left) + "px";
+    chip.style.top = (n.y + n.h / 2 - chip.offsetHeight / 2) + "px";
+  });
+
+  // ---- ツールチップ
+  const show = (n, evt) => {
+    let html = `<h3>${esc(n.label)}</h3>${fmtMan(n.man)}（全体の${pct(n.man, total)}）`;
+    if (n.desc) html += `<p class="tt-desc">${esc(n.desc)}</p>`;
+    if (n.breakdown) {
+      html += `<table>` + n.breakdown.map(b =>
+        `<tr><td>${esc(b.label)}</td><td>${fmtMan(b.man)}</td></tr>`).join("") + `</table>` +
+        `<p class="tt-note">少額項目をまとめて表示しています</p>`;
+    }
+    tooltip.innerHTML = html;
+    tooltip.style.display = "block";
+    const wrap = document.getElementById("chart-wrap").getBoundingClientRect();
+    let x = evt.clientX - wrap.left + 14, y = evt.clientY - wrap.top + 14;
+    x = Math.min(x, wrap.width - tooltip.offsetWidth - 8);
+    tooltip.style.left = Math.max(4, x) + "px";
+    tooltip.style.top = y + "px";
+  };
+  const hide = () => { tooltip.style.display = "none"; pinned = null; };
+
+  chart.querySelectorAll("rect[data-key], .ribbon").forEach(el => {
+    const n = nodeBy[el.dataset.key];
+    if (!n) return;
+    el.addEventListener("mousemove", e => { if (!pinned) show(n, e); });
+    el.addEventListener("mouseleave", () => { if (!pinned) hide(); });
+    el.addEventListener("click", e => {   // スマホのタップ＝クリック
+      e.stopPropagation();
+      if (pinned === n.key) { hide(); return; }
+      pinned = n.key; show(n, e);
+    });
+  });
+  document.addEventListener("click", hide, { once: true });
+}
+
+function getCss(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+/* ---------- 読み込み ---------- */
+const year = new URLSearchParams(location.search).get("year") || "r8";
+fetch(`data/budget/${year}.json`)
+  .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(data => {
+    BUDGET = data;
+    document.getElementById("title").textContent =
+      `${data.meta.year_label}当初予算 お金の流れ`;
+    document.getElementById("subtitle").textContent =
+      `${data.meta.title} ・ 総額 ${fmtMan(data.meta.total_man)}`;
+    document.title = `${data.meta.year_label}当初予算 お金の流れ | みんなの議事録 周防大島町`;
+    const link = document.getElementById("src-link");
+    link.href = data.meta.source.url;
+    link.textContent = `${data.meta.source.name}（PDF）`;
+    document.getElementById("note").textContent = data.meta.note || "";
+    render();
+  })
+  .catch(() => {
+    chart.innerHTML = `<div class="error-box">データ（data/budget/${esc(year)}.json）を読み込めませんでした。<br>
+      このページはWebサーバー経由で開く必要があります。ローカルでは
+      <code>python3 -m http.server -d docs 8080</code> を実行して
+      <code>http://localhost:8080/budget.html</code> を開いてください。</div>`;
+  });
+
+let resizeTimer;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(render, 150);
+});
+</script>
+</body>
+</html>
