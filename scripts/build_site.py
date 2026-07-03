@@ -29,6 +29,12 @@ OUT_DIR = PROJECT_ROOT / "docs"
 
 SITE_TITLE = "みんなの議事録"
 SITE_SUB = "周防大島町"
+BASE_URL = "https://datamonsters-jp.github.io/minna-no-gijiroku"
+SITE_DESC = (
+    "周防大島町議会の会議録をAIがわかりやすいことばに要約。"
+    "議題・一般質問・議案の結果を紹介する非公式サイトです。"
+)
+ASSETS_SRC = Path(__file__).resolve().parent.parent / "assets_src"
 DISCLAIMER = (
     "本サイトは公式の会議録PDFをAIが要約した非公式サイトです。"
     "正確な内容は必ず原文の会議録をご確認ください。"
@@ -133,15 +139,34 @@ def date_box(iso: str | None, alt: int) -> str:
 
 # ---------------------------------------------------------------- HTML部品
 
-def page(title: str, body: str, root: str = ".", active: str = "") -> str:
+def page(title: str, body: str, root: str = ".", active: str = "",
+         desc: str = SITE_DESC, path: str = "") -> str:
     nav_home = ' class="active"' if active == "home" else ""
     nav_search = ' class="active"' if active == "search" else ""
+    full_title = (f"{title} | {SITE_TITLE} {SITE_SUB}" if title
+                  else f"{SITE_TITLE} {SITE_SUB} — 町の議論を、みんなの手に。")
+    url = f"{BASE_URL}/{path}"
     return f"""<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{esc(title)} | {SITE_TITLE} {SITE_SUB}</title>
+<title>{esc(full_title)}</title>
+<meta name="description" content="{esc(desc)}">
+<link rel="canonical" href="{esc(url)}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{SITE_TITLE} {SITE_SUB}">
+<meta property="og:title" content="{esc(full_title)}">
+<meta property="og:description" content="{esc(desc)}">
+<meta property="og:url" content="{esc(url)}">
+<meta property="og:image" content="{BASE_URL}/assets/ogp.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{esc(full_title)}">
+<meta name="twitter:description" content="{esc(desc)}">
+<meta name="twitter:image" content="{BASE_URL}/assets/ogp.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -243,7 +268,7 @@ def build_top(sessions) -> str:
             current_year = y
         parts.append(session_card(sess, i))
     parts.append("</section>")
-    return page("ホーム", "\n".join(parts), active="home")
+    return page("", "\n".join(parts), active="home")
 
 
 def build_session_page(sess) -> str:
@@ -310,7 +335,12 @@ def build_session_page(sess) -> str:
             parts.append("</tbody></table>")
         parts.append("</section>")
 
-    return page(sess["title"], "\n".join(parts), root="..")
+    n_gidai = sum(len(d["data"].get("議題要約") or []) for d in sess["days"])
+    desc = (f"{sess['title']}（{fmt_date(sess['start'])}開会）の要約。"
+            f"議題{n_gidai}件・一般質問{sess['n_questions']}件と議案の結果を"
+            "わかりやすいことばで紹介します。")
+    return page(sess["title"], "\n".join(parts), root="..",
+                desc=desc, path=f"kaigi/{sess['slug']}.html")
 
 
 def build_search(sessions) -> tuple[str, list]:
@@ -377,7 +407,10 @@ fetch("data/questions.json").then(r => r.json()).then(data => {{
 document.getElementById("member").addEventListener("change", render);
 document.getElementById("keyword").addEventListener("input", render);
 </script>"""
-    return page("一般質問をさがす", body, active="search"), questions
+    desc = ("周防大島町議会の一般質問を議員別・キーワード別に検索できます。"
+            "質問と答弁の要旨をわかりやすいことばで紹介します。")
+    return page("一般質問をさがす", body, active="search",
+                desc=desc, path="search.html"), questions
 
 
 STYLE = """/* みんなの議事録 周防大島 — design_handoff_gijiroku 準拠 */
@@ -643,6 +676,10 @@ def main() -> int:
     (OUT_DIR / "data").mkdir()
 
     (OUT_DIR / "assets" / "style.css").write_text(STYLE, encoding="utf-8")
+    if ASSETS_SRC.exists():
+        for asset in ASSETS_SRC.iterdir():
+            if asset.is_file() and not asset.name.startswith("."):
+                shutil.copy2(asset, OUT_DIR / "assets" / asset.name)
     (OUT_DIR / "index.html").write_text(build_top(sessions), encoding="utf-8")
 
     for sess in sessions:
