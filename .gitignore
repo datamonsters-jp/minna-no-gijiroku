@@ -1,0 +1,24 @@
+# 秘密情報（APIキーなどは環境変数か .env で管理し、絶対にコミットしない）
+.env
+.env.*
+*.pem
+*.key
+
+# Python仮想環境・キャッシュ
+.venv/
+__pycache__/
+*.pyc
+
+# 会議録PDF本体（著作権配慮のためリポジトリに含めない。
+# scripts/fetch_minutes.py で town.suo-oshima.lg.jp から再取得できる）
+data/pdfs/
+
+# 実行中の一時状態ファイル
+data/batch_state.json
+*.tmp
+
+# OS固有ファイル
+.DS_Store
+
+# デザインハンドオフ（非公開）
+design_handoff_gijiroku/

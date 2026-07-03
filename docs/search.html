@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>一般質問をさがす | みんなの議事録 周防大島町</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./assets/style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="./index.html">
+    <span class="logo">議</span>
+    <span class="brand-text"><span class="brand-title">みんなの議事録</span><span class="brand-sub">周防大島町</span></span>
+  </a>
+  <nav><a href="./index.html">ホーム</a><a href="./search.html" class="active">一般質問をさがす</a></nav>
+</header>
+<main>
+<h1>一般質問をさがす</h1>
+<p class="section-lead">議員の名前やキーワード（例: 防災、観光、人口減少）で、これまでの一般質問を絞り込めます。</p>
+<div class="panel search-controls">
+  <label>議員でしぼる
+    <select id="member"><option value="">すべての議員</option><option value="久保雅己">久保雅己</option><option value="占部智子">占部智子</option><option value="吉村忍">吉村忍</option><option value="吉田芳春">吉田芳春</option><option value="小田貞利">小田貞利</option><option value="尾元武">尾元武</option><option value="山中正樹">山中正樹</option><option value="山根耕治">山根耕治</option><option value="岡﨑裕一">岡﨑裕一</option><option value="平野和生">平野和生</option><option value="新田健介">新田健介</option><option value="松井岑雄">松井岑雄</option><option value="栄本忠嗣">栄本忠嗣</option><option value="淺原賢潤">淺原賢潤</option><option value="田中豊文">田中豊文</option><option value="白鳥法子">白鳥法子</option><option value="砂田雅一">砂田雅一</option><option value="竹田茂伸">竹田茂伸</option><option value="藤本淨孝">藤本淨孝</option></select>
+  </label>
+  <label>キーワード
+    <input type="search" id="keyword" placeholder="🔍 例: 防災">
+  </label>
+</div>
+<p id="count" class="search-count"></p>
+<div id="results"></div>
+<script>
+const fmtDate = iso => {
+  const m = iso.match(/(\d+)-(\d+)-(\d+)/);
+  return m ? `${+m[1]}年${+m[2]}月${+m[3]}日` : iso;
+};
+let QUESTIONS = [];
+const escapeHtml = s => s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function render() {
+  const member = document.getElementById("member").value;
+  const kw = document.getElementById("keyword").value.trim();
+  const hits = QUESTIONS.filter(q =>
+    (!member || q.member === member) &&
+    (!kw || (q.theme + q.question + q.answer + q.member_raw).includes(kw))
+  );
+  document.getElementById("count").textContent = `${hits.length}件みつかりました`;
+  document.getElementById("results").innerHTML = hits.map(q => `
+    <div class="question">
+      <p class="q-header"><span class="avatar">${escapeHtml(q.member.slice(0, 1) || "議")}</span>
+      <span><span class="q-member">${escapeHtml(q.member_raw)}</span><br>
+      <span class="q-theme">${escapeHtml(q.theme)}</span></span></p>
+      <p class="q-session"><a href="${q.url}">${escapeHtml(q.session)}</a> ・ ${fmtDate(q.date)}</p>
+      <div class="q-body">
+        <p class="q-label">質問</p><p>${escapeHtml(q.question)}</p>
+        <div class="answer"><p class="q-label a-label">答弁</p><p>${escapeHtml(q.answer)}</p></div>
+      </div>
+    </div>`).join("") || '<p>該当する質問が見つかりませんでした。</p>';
+}
+fetch("data/questions.json").then(r => r.json()).then(data => {
+  QUESTIONS = data;
+  render();
+});
+document.getElementById("member").addEventListener("change", render);
+document.getElementById("keyword").addEventListener("input", render);
+</script>
+</main>
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p class="footer-brand"><span class="logo">議</span> みんなの議事録 <span class="footer-sub">周防大島町</span></p>
+    <p class="disclaimer">本サイトは公式の会議録PDFをAIが要約した非公式サイトです。正確な内容は必ず原文の会議録をご確認ください。</p>
+    <p class="source">原文の会議録: <a href="https://www.town.suo-oshima.lg.jp/site/gikai/list18-56.html">周防大島町議会 会議録一覧</a></p>
+  </div>
+</footer>
+</body>
+</html>
