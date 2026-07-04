@@ -142,7 +142,17 @@ h3 { font-size: 1.12rem; margin: 1.8rem 0 0.8rem; }
 .card-meta { color: var(--muted); font-size: 0.9rem; margin: 0; }
 .chevron { color: #C4B8A8; font-size: 1.6rem; }
 
-.budget-card { border-width: 2px; border-color: var(--orange); }
+/* ---------- 周防大島町の今 ---------- */
+.pop-stats { margin-top: 0.6rem; }
+.stat-num.navy { color: #1F3557; }
+.stat-num.red { color: #B0392E; }
+.stat-sub { color: var(--muted); font-size: 0.88rem; margin: 0; }
+.pop-source { color: var(--muted); font-size: 0.85rem; margin: 0.5rem 0 0; }
+.pop-source a { color: var(--orange-darker); }
+.chart-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.chart-scroll svg { min-width: 560px; width: 100%; height: auto; display: block; }
+
+.budget-card { border-width: 2px; border-color: var(--orange); margin-top: 1.6rem; }
 .budget-icon {
   flex: none; width: 56px; height: 56px; border-radius: 12px;
   background: var(--orange); color: #fff;

@@ -37,6 +37,8 @@ SITE_DESC = (
 ASSETS_SRC = Path(__file__).resolve().parent.parent / "assets_src"
 PAGES_SRC = Path(__file__).resolve().parent.parent / "pages_src"
 BUDGET_DIR = Path(__file__).resolve().parent.parent / "data" / "budget"
+POPULATION_PATH = Path(__file__).resolve().parent.parent / "data" / "population" / "monthly.json"
+KOUHOU_BACKNUMBER_URL = "https://www.town.suo-oshima.lg.jp/soshiki/2/1572.html"
 DISCLAIMER = (
     "本サイトは公式の会議録PDFをAIが要約した非公式サイトです。"
     "正確な内容は必ず原文の会議録をご確認ください。"
@@ -221,6 +223,172 @@ def session_card(sess, alt: int, root=".") -> str:
 
 # ---------------------------------------------------------------- 各ページ
 
+def fmt_signed(v: int) -> str:
+    return ("＋" if v > 0 else "−" if v < 0 else "±") + f"{abs(v):,}"
+
+
+def population_line_chart(rows) -> str:
+    """人口（左軸・実線）と世帯数（右軸・破線）の折れ線SVG。"""
+    W, H, mL, mR, mT, mB = 720, 300, 68, 68, 30, 44
+    pw, ph = W - mL - mR, H - mT - mB
+    n = len(rows)
+    pops = [r["人口"] for r in rows]
+    hhs = [r["世帯"] for r in rows]
+
+    def scale(vals):
+        lo = (min(vals) // 100) * 100
+        hi = -((-max(vals)) // 100) * 100
+        if lo == hi:
+            hi += 100
+        return lo, hi
+
+    plo, phi = scale(pops)
+    hlo, hhi = scale(hhs)
+    x = lambda i: mL + pw * i / (n - 1)
+    yp = lambda v: mT + ph * (1 - (v - plo) / (phi - plo))
+    yh = lambda v: mT + ph * (1 - (v - hlo) / (hhi - hlo))
+
+    parts = []
+    # 左軸グリッドと目盛り
+    for v in range(plo, phi + 1, 100):
+        parts.append(f'<line x1="{mL}" y1="{yp(v):.1f}" x2="{W - mR}" y2="{yp(v):.1f}" stroke="#F0E8DC" stroke-width="1"/>')
+        parts.append(f'<text x="{mL - 8}" y="{yp(v):.1f}" font-size="12" fill="#8C7B66" text-anchor="end" dominant-baseline="middle">{v:,}</text>')
+    # 右軸目盛り
+    for v in range(hlo, hhi + 1, 100):
+        parts.append(f'<text x="{W - mR + 8}" y="{yh(v):.1f}" font-size="12" fill="#8C7B66" dominant-baseline="middle">{v:,}</text>')
+    # 月ラベル（年の変わり目に年も表示）
+    prev_year = None
+    for i, r in enumerate(rows):
+        yy, mm = r["基準日"][:4], int(r["基準日"][5:7])
+        parts.append(f'<text x="{x(i):.1f}" y="{H - mB + 18}" font-size="12" fill="#6B5D4F" text-anchor="middle">{mm}月</text>')
+        if yy != prev_year:
+            parts.append(f'<text x="{x(i):.1f}" y="{H - mB + 34}" font-size="11" fill="#A89880" text-anchor="middle">{yy}年</text>')
+            prev_year = yy
+    # 折れ線
+    pop_pts = " ".join(f"{x(i):.1f},{yp(v):.1f}" for i, v in enumerate(pops))
+    hh_pts = " ".join(f"{x(i):.1f},{yh(v):.1f}" for i, v in enumerate(hhs))
+    parts.append(f'<polyline points="{hh_pts}" fill="none" stroke="#7AA5CC" stroke-width="2.5" stroke-dasharray="6 4"/>')
+    parts.append(f'<polyline points="{pop_pts}" fill="none" stroke="#1F3557" stroke-width="3"/>')
+    for i, v in enumerate(pops):
+        parts.append(f'<circle cx="{x(i):.1f}" cy="{yp(v):.1f}" r="3.5" fill="#1F3557"/>')
+    # 凡例
+    parts.append(f'<line x1="{mL}" y1="14" x2="{mL + 26}" y2="14" stroke="#1F3557" stroke-width="3"/>'
+                 f'<text x="{mL + 32}" y="14" font-size="13" fill="#2C2418" dominant-baseline="middle">人口（左軸）</text>')
+    parts.append(f'<line x1="{mL + 140}" y1="14" x2="{mL + 166}" y2="14" stroke="#7AA5CC" stroke-width="2.5" stroke-dasharray="6 4"/>'
+                 f'<text x="{mL + 172}" y="14" font-size="13" fill="#2C2418" dominant-baseline="middle">世帯数（右軸）</text>')
+    return f'<svg viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="人口と世帯数の推移">{"".join(parts)}</svg>'
+
+
+def population_bar_chart(rows) -> str:
+    """月ごとの自然増減・社会増減の積み上げ棒SVG（減=赤系、増=青系）。"""
+    W, H, mL, mR, mT, mB = 720, 310, 52, 16, 30, 60
+    pw, ph = W - mL - mR, H - mT - mB
+    n = len(rows)
+    stack_lo = min(min(0, r["自然増減"]) + min(0, r["社会増減"]) for r in rows)
+    stack_hi = max(max(0, r["自然増減"]) + max(0, r["社会増減"]) for r in rows)
+    lo = (stack_lo // 10) * 10 - 10
+    hi = -((-stack_hi) // 10) * 10 + 10
+    y = lambda v: mT + ph * (hi - v) / (hi - lo)
+    bw = pw / n * 0.55
+
+    C = {"nat-": "#B0392E", "soc-": "#E4756A", "nat+": "#1E4A7A", "soc+": "#7AA5CC"}
+    parts = []
+    for v in range(lo, hi + 1, 20):
+        parts.append(f'<line x1="{mL}" y1="{y(v):.1f}" x2="{W - mR}" y2="{y(v):.1f}" stroke="#F0E8DC"/>')
+        parts.append(f'<text x="{mL - 6}" y="{y(v):.1f}" font-size="12" fill="#8C7B66" text-anchor="end" dominant-baseline="middle">{fmt_signed(v) if v else "0"}</text>')
+    prev_year = None
+    for i, r in enumerate(rows):
+        cx = mL + pw * (i + 0.5) / n
+        up = down = 0
+        for key, val in (("nat", r["自然増減"]), ("soc", r["社会増減"])):
+            if val == 0:
+                continue
+            if val > 0:
+                y0, y1 = y(up + val), y(up)
+                up += val
+                color = C[key + "+"]
+            else:
+                y0, y1 = y(down), y(down + val)
+                down += val
+                color = C[key + "-"]
+            parts.append(f'<rect x="{cx - bw / 2:.1f}" y="{y0:.1f}" width="{bw:.1f}" height="{max(y1 - y0, 1):.1f}" fill="{color}" rx="1.5"/>')
+        total = r["自然増減"] + r["社会増減"]
+        ty = y(down) + 14 if total < 0 else y(up) - 6
+        parts.append(f'<text x="{cx:.1f}" y="{ty:.1f}" font-size="11.5" font-weight="bold" fill="{"#B0392E" if total < 0 else "#1E4A7A"}" text-anchor="middle">{fmt_signed(total)}</text>')
+        yy, mm = r["基準日"][:4], int(r["基準日"][5:7])
+        parts.append(f'<text x="{cx:.1f}" y="{H - mB + 32}" font-size="12" fill="#6B5D4F" text-anchor="middle">{mm}月</text>')
+        if yy != prev_year:
+            parts.append(f'<text x="{cx:.1f}" y="{H - mB + 48}" font-size="11" fill="#A89880" text-anchor="middle">{yy}年</text>')
+            prev_year = yy
+    # ゼロ線を強調
+    parts.append(f'<line x1="{mL}" y1="{y(0):.1f}" x2="{W - mR}" y2="{y(0):.1f}" stroke="#6B5D4F" stroke-width="1.5"/>')
+    # 凡例
+    parts.append(f'<rect x="{mL}" y="8" width="13" height="13" fill="#B0392E" rx="3"/>'
+                 f'<text x="{mL + 19}" y="15" font-size="13" fill="#2C2418" dominant-baseline="middle">自然増減（出生−死亡）</text>')
+    parts.append(f'<rect x="{mL + 190}" y="8" width="13" height="13" fill="#E4756A" rx="3"/>'
+                 f'<text x="{mL + 209}" y="15" font-size="13" fill="#2C2418" dominant-baseline="middle">社会増減（転入−転出）</text>')
+    parts.append(f'<text x="{mL + 390}" y="15" font-size="12" fill="#8C7B66" dominant-baseline="middle">※赤=減った月・青=増えた月</text>')
+    return f'<svg viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="毎月の人口増減の内訳">{"".join(parts)}</svg>'
+
+
+def build_population_section() -> str:
+    if not POPULATION_PATH.exists():
+        return ""
+    data = json.loads(POPULATION_PATH.read_text(encoding="utf-8"))
+    rows = data["monthly"]
+    if not rows:
+        return ""
+    latest = rows[-1]
+    delta = sum(r["人口増減"] for r in rows)
+    base = latest["人口"] - delta
+    pct_s = f"{delta / base * 100:+.1f}%".replace("+", "＋").replace("-", "−")
+    natural = sum(r["自然増減"] for r in rows)
+    social = sum(r["社会増減"] for r in rows)
+    births = sum(r["出生"] for r in rows)
+    deaths = sum(r["死亡"] for r in rows)
+    move_in = sum(r["転入"] for r in rows)
+    move_out = sum(r["転出"] for r in rows)
+    ref = latest["基準日"]
+    ref_label = f"{int(ref[5:7])}月{int(ref[8:10])}日"
+    period = (f"{rows[0]['基準日'][:4]}年{int(rows[0]['基準日'][5:7])}月〜"
+              f"{ref[:4]}年{int(ref[5:7])}月")
+    src_pdf = latest.get("_pdf_url", KOUHOU_BACKNUMBER_URL)
+
+    return f"""<section>
+  <h2>周防大島町の今</h2>
+  <p class="section-lead">町の「人口」「お金」を、議会の話題とあわせてどうぞ。</p>
+  <div class="stats pop-stats">
+    <div class="stat-card"><p class="stat-label">現在の人口（{esc(ref_label)}時点）</p>
+      <p class="stat-num navy">{latest['人口']:,}<span class="stat-unit">人</span></p>
+      <p class="stat-sub">世帯数 {latest['世帯']:,}戸</p></div>
+    <div class="stat-card"><p class="stat-label">この1年の増減</p>
+      <p class="stat-num red">{fmt_signed(delta)}<span class="stat-unit">人</span></p>
+      <p class="stat-sub">{esc(pct_s)}</p></div>
+    <div class="stat-card"><p class="stat-label">自然増減（出生−死亡）</p>
+      <p class="stat-num red">{fmt_signed(natural)}<span class="stat-unit">人</span></p>
+      <p class="stat-sub">出生{births}・死亡{deaths}</p></div>
+    <div class="stat-card"><p class="stat-label">社会増減（転入−転出）</p>
+      <p class="stat-num {'red' if social < 0 else 'navy'}">{fmt_signed(social)}<span class="stat-unit">人</span></p>
+      <p class="stat-sub">転入{move_in}・転出{move_out}（ほぼ拮抗）</p></div>
+  </div>
+  <p class="pop-source">出典: <a href="{esc(src_pdf)}">広報すおう大島 {esc(latest['掲載号'])}「人のうごき」(PDF)</a></p>
+  <h3>人口・世帯数の推移（{esc(period)}）</h3>
+  <div class="panel chart-scroll">{population_line_chart(rows)}</div>
+  <h3>毎月なぜ減っているのか（増減の内訳）</h3>
+  <p class="section-lead">棒がゼロ線より下に伸びるほど、その月に人口が減ったことを表します。大半は出生より死亡が多い「自然減」です。</p>
+  <div class="panel chart-scroll">{population_bar_chart(rows)}</div>
+  <p class="pop-source">出典: <a href="{esc(KOUHOU_BACKNUMBER_URL)}">広報すおう大島 各号（バックナンバー一覧）</a>の「人のうごき」から集計</p>
+  <a class="card budget-card" href="budget.html">
+    <div class="budget-icon">¥</div>
+    <div class="session-card-body">
+      <h3>令和8年度当初予算 お金の流れ</h3>
+      <p class="card-meta">総額171億5,000万円が「どこから入って、何に使われるのか」を1枚の図で。各項目のやさしい解説つき</p>
+    </div>
+    <span class="chevron">›</span>
+  </a>
+</section>"""
+
+
 def build_top(sessions) -> str:
     latest = sessions[0]
     total_q = sum(s["n_questions"] for s in sessions)
@@ -260,17 +428,7 @@ def build_top(sessions) -> str:
   <p class="section-lead">各会期の頻出キーワードから集計しています。</p>
   <div class="panel">{theme_rows}</div>
 </section>
-<section>
-  <h2>予算をながめる</h2>
-  <a class="card budget-card" href="budget.html">
-    <div class="budget-icon">¥</div>
-    <div class="session-card-body">
-      <h3>令和8年度当初予算 お金の流れ</h3>
-      <p class="card-meta">総額171億5,000万円が「どこから入って、何に使われるのか」を1枚の図で。各項目のやさしい解説つき</p>
-    </div>
-    <span class="chevron">›</span>
-  </a>
-</section>
+{build_population_section()}
 <section>
   <h2>これまでの議会</h2>"""]
     current_year = None
@@ -570,7 +728,17 @@ h3 { font-size: 1.12rem; margin: 1.8rem 0 0.8rem; }
 .card-meta { color: var(--muted); font-size: 0.9rem; margin: 0; }
 .chevron { color: #C4B8A8; font-size: 1.6rem; }
 
-.budget-card { border-width: 2px; border-color: var(--orange); }
+/* ---------- 周防大島町の今 ---------- */
+.pop-stats { margin-top: 0.6rem; }
+.stat-num.navy { color: #1F3557; }
+.stat-num.red { color: #B0392E; }
+.stat-sub { color: var(--muted); font-size: 0.88rem; margin: 0; }
+.pop-source { color: var(--muted); font-size: 0.85rem; margin: 0.5rem 0 0; }
+.pop-source a { color: var(--orange-darker); }
+.chart-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.chart-scroll svg { min-width: 560px; width: 100%; height: auto; display: block; }
+
+.budget-card { border-width: 2px; border-color: var(--orange); margin-top: 1.6rem; }
 .budget-icon {
   flex: none; width: 56px; height: 56px; border-radius: 12px;
   background: var(--orange); color: #fff;
