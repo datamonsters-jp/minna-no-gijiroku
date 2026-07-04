@@ -38,6 +38,7 @@ ASSETS_SRC = Path(__file__).resolve().parent.parent / "assets_src"
 PAGES_SRC = Path(__file__).resolve().parent.parent / "pages_src"
 BUDGET_DIR = Path(__file__).resolve().parent.parent / "data" / "budget"
 POPULATION_PATH = Path(__file__).resolve().parent.parent / "data" / "population" / "monthly.json"
+COUNCIL_PATH = Path(__file__).resolve().parent.parent / "data" / "council.json"
 KOUHOU_BACKNUMBER_URL = "https://www.town.suo-oshima.lg.jp/soshiki/2/1572.html"
 DISCLAIMER = (
     "本サイトは公式の会議録PDFをAIが要約した非公式サイトです。"
@@ -532,8 +533,26 @@ def build_search(sessions) -> tuple[str, list]:
     members = sorted({q["member"] for q in questions if q["member"]})
     options = "".join(f'<option value="{esc(m)}">{esc(m)}</option>' for m in members)
 
+    council_html = ""
+    if COUNCIL_PATH.exists():
+        council = json.loads(COUNCIL_PATH.read_text(encoding="utf-8"))
+        chips = "".join(
+            f'<button type="button" class="member-chip" data-name="{esc(m["氏名"])}">'
+            f'{esc(m["氏名"])}</button>'
+            for m in council["議員"])
+        council_html = f"""<div class="panel council-box">
+  <h2 class="council-title">周防大島町議会の構成</h2>
+  <p>周防大島町議会の議員は<strong>定数14人</strong>（{esc(council['meta']['as_of'])}）。
+  現在の議員の任期は<strong>{esc(council['任期'])}</strong>です。
+  町全体からえらばれた14人が、条例や予算の審議・一般質問などを通じて町政をチェックしています。</p>
+  <p class="council-hint">議員の名前を押すと、その議員の一般質問に絞り込めます。</p>
+  <div class="member-chips">{chips}</div>
+  <p class="pop-source">出典: <a href="{esc(council['meta']['source_url'])}">{esc(council['meta']['source_name'])}</a></p>
+</div>"""
+
     body = f"""<h1>一般質問をさがす</h1>
 <p class="section-lead">議員の名前やキーワード（例: 防災、観光、人口減少）で、これまでの一般質問を絞り込めます。</p>
+{council_html}
 <div class="panel search-controls">
   <label>議員でしぼる
     <select id="member"><option value="">すべての議員</option>{options}</select>
@@ -574,9 +593,33 @@ function render() {{
 fetch("data/questions.json").then(r => r.json()).then(data => {{
   QUESTIONS = data;
   render();
+  setupChips();
 }});
 document.getElementById("member").addEventListener("change", render);
 document.getElementById("keyword").addEventListener("input", render);
+
+// 議会構成の名前チップ: 押すとその議員で絞り込み。「﨑/崎」の表記ゆれも吸収
+function chipVariants(name) {{
+  return [name, name.replace(/﨑/g, "崎"), name.replace(/崎/g, "﨑")];
+}}
+function setupChips() {{
+  const select = document.getElementById("member");
+  const optionValues = [...select.options].map(o => o.value);
+  document.querySelectorAll(".member-chip").forEach(chip => {{
+    const match = chipVariants(chip.dataset.name).find(v => optionValues.includes(v));
+    if (!match) {{
+      chip.classList.add("no-q");
+      chip.title = "掲載期間内の一般質問はありません";
+      return;
+    }}
+    chip.addEventListener("click", () => {{
+      select.value = match;
+      document.getElementById("keyword").value = "";
+      render();
+      document.getElementById("count").scrollIntoView({{ behavior: "smooth", block: "start" }});
+    }});
+  }});
+}}
 </script>"""
     desc = ("周防大島町議会の一般質問を議員別・キーワード別に検索できます。"
             "質問と答弁の要旨をわかりやすいことばで紹介します。")
@@ -832,6 +875,23 @@ td.result.na { color: var(--muted); }
 }
 .search-controls select:focus, .search-controls input:focus { outline: 2px solid var(--orange); border-color: var(--orange); }
 .search-count { color: var(--muted); }
+
+.council-box { margin: 1.2rem 0 1.6rem; }
+.council-title { font-size: 1.15rem; margin: 0 0 0.5rem; border: none; padding: 0; }
+.council-box p { margin: 0 0 0.5rem; }
+.council-hint { color: var(--muted); font-size: 0.9rem; }
+.member-chips { display: flex; flex-wrap: wrap; gap: 0.45rem; margin: 0.4rem 0 0.6rem; }
+.member-chip {
+  font: inherit; font-size: 0.95rem; font-weight: 600;
+  background: var(--orange-bg); color: var(--orange-darker);
+  border: 1px solid transparent; border-radius: 20px;
+  padding: 0.15rem 0.9rem; cursor: pointer; transition: all 0.15s;
+}
+.member-chip:hover { border-color: var(--orange); transform: translateY(-1px); }
+.member-chip.no-q {
+  background: var(--hover-bg); color: var(--faint); cursor: default;
+}
+.member-chip.no-q:hover { border-color: transparent; transform: none; }
 
 /* ---------- footer ---------- */
 .site-footer { background: var(--footer-bg); margin-top: 4rem; padding: 2rem 1.2rem 2.5rem; }

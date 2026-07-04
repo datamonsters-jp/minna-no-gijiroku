@@ -35,6 +35,15 @@
 <main>
 <h1>一般質問をさがす</h1>
 <p class="section-lead">議員の名前やキーワード（例: 防災、観光、人口減少）で、これまでの一般質問を絞り込めます。</p>
+<div class="panel council-box">
+  <h2 class="council-title">周防大島町議会の構成</h2>
+  <p>周防大島町議会の議員は<strong>定数14人</strong>（令和6年11月19日現在）。
+  現在の議員の任期は<strong>令和6年11月14日〜令和10年11月13日</strong>です。
+  町全体からえらばれた14人が、条例や予算の審議・一般質問などを通じて町政をチェックしています。</p>
+  <p class="council-hint">議員の名前を押すと、その議員の一般質問に絞り込めます。</p>
+  <div class="member-chips"><button type="button" class="member-chip" data-name="占部智子">占部智子</button><button type="button" class="member-chip" data-name="淺原賢潤">淺原賢潤</button><button type="button" class="member-chip" data-name="山根耕治">山根耕治</button><button type="button" class="member-chip" data-name="栄本忠嗣">栄本忠嗣</button><button type="button" class="member-chip" data-name="岡﨑裕一">岡﨑裕一</button><button type="button" class="member-chip" data-name="山中正樹">山中正樹</button><button type="button" class="member-chip" data-name="白鳥法子">白鳥法子</button><button type="button" class="member-chip" data-name="田中豊文">田中豊文</button><button type="button" class="member-chip" data-name="新田健介">新田健介</button><button type="button" class="member-chip" data-name="吉村忍">吉村忍</button><button type="button" class="member-chip" data-name="久保雅己">久保雅己</button><button type="button" class="member-chip" data-name="小田貞利">小田貞利</button><button type="button" class="member-chip" data-name="尾元武">尾元武</button><button type="button" class="member-chip" data-name="荒川政義">荒川政義</button></div>
+  <p class="pop-source">出典: <a href="https://www.town.suo-oshima.lg.jp/site/gikai/7270.html">周防大島町議会 議員名簿</a></p>
+</div>
 <div class="panel search-controls">
   <label>議員でしぼる
     <select id="member"><option value="">すべての議員</option><option value="久保雅己">久保雅己</option><option value="占部智子">占部智子</option><option value="吉村忍">吉村忍</option><option value="吉田芳春">吉田芳春</option><option value="小田貞利">小田貞利</option><option value="尾元武">尾元武</option><option value="山中正樹">山中正樹</option><option value="山根耕治">山根耕治</option><option value="岡﨑裕一">岡﨑裕一</option><option value="平野和生">平野和生</option><option value="新田健介">新田健介</option><option value="松井岑雄">松井岑雄</option><option value="栄本忠嗣">栄本忠嗣</option><option value="淺原賢潤">淺原賢潤</option><option value="田中豊文">田中豊文</option><option value="白鳥法子">白鳥法子</option><option value="砂田雅一">砂田雅一</option><option value="竹田茂伸">竹田茂伸</option><option value="藤本淨孝">藤本淨孝</option></select>
@@ -75,9 +84,33 @@ function render() {
 fetch("data/questions.json").then(r => r.json()).then(data => {
   QUESTIONS = data;
   render();
+  setupChips();
 });
 document.getElementById("member").addEventListener("change", render);
 document.getElementById("keyword").addEventListener("input", render);
+
+// 議会構成の名前チップ: 押すとその議員で絞り込み。「﨑/崎」の表記ゆれも吸収
+function chipVariants(name) {
+  return [name, name.replace(/﨑/g, "崎"), name.replace(/崎/g, "﨑")];
+}
+function setupChips() {
+  const select = document.getElementById("member");
+  const optionValues = [...select.options].map(o => o.value);
+  document.querySelectorAll(".member-chip").forEach(chip => {
+    const match = chipVariants(chip.dataset.name).find(v => optionValues.includes(v));
+    if (!match) {
+      chip.classList.add("no-q");
+      chip.title = "掲載期間内の一般質問はありません";
+      return;
+    }
+    chip.addEventListener("click", () => {
+      select.value = match;
+      document.getElementById("keyword").value = "";
+      render();
+      document.getElementById("count").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+}
 </script>
 </main>
 <footer class="site-footer">

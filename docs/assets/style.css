@@ -247,6 +247,23 @@ td.result.na { color: var(--muted); }
 .search-controls select:focus, .search-controls input:focus { outline: 2px solid var(--orange); border-color: var(--orange); }
 .search-count { color: var(--muted); }
 
+.council-box { margin: 1.2rem 0 1.6rem; }
+.council-title { font-size: 1.15rem; margin: 0 0 0.5rem; border: none; padding: 0; }
+.council-box p { margin: 0 0 0.5rem; }
+.council-hint { color: var(--muted); font-size: 0.9rem; }
+.member-chips { display: flex; flex-wrap: wrap; gap: 0.45rem; margin: 0.4rem 0 0.6rem; }
+.member-chip {
+  font: inherit; font-size: 0.95rem; font-weight: 600;
+  background: var(--orange-bg); color: var(--orange-darker);
+  border: 1px solid transparent; border-radius: 20px;
+  padding: 0.15rem 0.9rem; cursor: pointer; transition: all 0.15s;
+}
+.member-chip:hover { border-color: var(--orange); transform: translateY(-1px); }
+.member-chip.no-q {
+  background: var(--hover-bg); color: var(--faint); cursor: default;
+}
+.member-chip.no-q:hover { border-color: transparent; transform: none; }
+
 /* ---------- footer ---------- */
 .site-footer { background: var(--footer-bg); margin-top: 4rem; padding: 2rem 1.2rem 2.5rem; }
 .footer-inner { max-width: 46rem; margin: 0 auto; }

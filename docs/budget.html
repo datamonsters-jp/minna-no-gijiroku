@@ -10,6 +10,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
+  --orange: #E8873C;
+  --divider: #E8DFD0;
   --jishu: #B0392E;        /* 自主財源: 濃い赤 */
   --izon: #E4756A;         /* 依存財源: 明るい赤 */
   --navy: #1F3557;         /* 中央: 濃紺 */
@@ -25,6 +27,35 @@ body {
   font-family: "Noto Sans JP", "Hiragino Sans", Meiryo, sans-serif;
   font-size: 16px; line-height: 1.8;
 }
+/* 共通ヘッダー（サイト全体と同デザイン） */
+.site-header {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(254,252,247,0.85); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--divider);
+  padding: 0.6rem 1.2rem;
+  display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem;
+  align-items: center; justify-content: space-between;
+}
+.brand { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; }
+.logo {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px; border-radius: 11px;
+  background: var(--orange); color: #fff; font-weight: 700; font-size: 1.15rem;
+  font-family: "Zen Maru Gothic", "Noto Sans JP", sans-serif;
+}
+.brand-text { display: flex; flex-direction: column; line-height: 1.25; }
+.brand-title { color: var(--text); font-weight: 700; font-size: 1.1rem;
+  font-family: "Zen Maru Gothic", "Noto Sans JP", sans-serif; }
+.brand-sub { color: var(--muted); font-size: 0.8rem; }
+.site-header nav a {
+  color: var(--text-2); text-decoration: none; margin-left: 1.2rem;
+  font-size: 1rem; font-weight: 500;
+}
+.site-header nav a.active, .site-header nav a:hover { color: var(--orange); }
+@media (max-width: 640px) {
+  .site-header nav a { margin-left: 0.9rem; }
+}
+
 header.page-head { max-width: 1200px; margin: 0 auto; padding: 1.6rem 1.2rem 0; }
 h1 { font-family: "Zen Maru Gothic", sans-serif; font-size: 1.6rem; margin: 0 0 0.2rem; }
 .subtitle { color: var(--text-2); margin: 0; }
@@ -79,6 +110,13 @@ footer.page-foot a { color: #C06828; }
 </style>
 </head>
 <body>
+<header class="site-header">
+  <a class="brand" href="index.html">
+    <span class="logo">議</span>
+    <span class="brand-text"><span class="brand-title">みんなの議事録</span><span class="brand-sub">周防大島町</span></span>
+  </a>
+  <nav><a href="index.html">ホーム</a><a href="search.html">一般質問をさがす</a><a href="budget.html" class="active">予算のながれ</a></nav>
+</header>
 <header class="page-head">
   <h1 id="title">当初予算 お金の流れ</h1>
   <p class="subtitle" id="subtitle"></p>
