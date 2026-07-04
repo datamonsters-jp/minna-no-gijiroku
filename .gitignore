@@ -22,3 +22,6 @@ data/batch_state.json
 
 # デザインハンドオフ（非公開）
 design_handoff_gijiroku/
+
+# 広報PDF（fetch_population.py がダウンロード）
+data/kouhou_pdfs/
