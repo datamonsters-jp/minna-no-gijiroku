@@ -371,5 +371,14 @@
     <p class="source">原文の会議録: <a href="https://www.town.suo-oshima.lg.jp/site/gikai/list18-56.html">周防大島町議会 会議録一覧</a></p>
   </div>
 </footer>
+<script>
+// Webフォント読み込みでレイアウトが変わるため、フォント確定後にアンカー位置へ再スクロール
+if (location.hash) {
+  document.fonts.ready.then(() => {
+    const el = document.querySelector(location.hash);
+    if (el) el.scrollIntoView();
+  });
+}
+</script>
 </body>
 </html>

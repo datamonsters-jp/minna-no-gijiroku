@@ -93,6 +93,33 @@ h1 { font-family: "Zen Maru Gothic", sans-serif; font-size: 1.6rem; margin: 0 0 
   border-top: 1px dashed var(--card-border); color: var(--text-2);
 }
 
+/* コラム: データ本体とは性質が違う読み物 */
+.column-box {
+  max-width: 44rem; margin: 2.5rem auto 0; padding: 1.4rem 1.6rem 1.6rem;
+  background: #FFF8F0; border: 1px solid #F2DFC8; border-radius: 14px;
+}
+.column-label {
+  display: inline-block; margin: 0 0 0.3rem;
+  background: var(--orange); color: #fff;
+  border-radius: 6px; padding: 0.05rem 0.7rem;
+  font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em;
+}
+.column-title {
+  font-family: "Zen Maru Gothic", "Noto Sans JP", sans-serif;
+  font-size: 1.25rem; margin: 0 0 0.8rem;
+}
+.column-box p { margin: 0 0 0.9rem; }
+.column-formula {
+  background: #fff; border: 1px dashed #E8DFD0; border-radius: 10px;
+  padding: 0.7rem 1rem; text-align: center; font-weight: 600;
+}
+.column-links { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 0 !important; }
+.column-links a { color: #C06828; font-weight: 600; text-decoration: none; }
+.column-links a:hover { text-decoration: underline; }
+@media (max-width: 640px) {
+  .column-box { padding: 1.1rem 1.1rem 1.3rem; }
+}
+
 footer.page-foot {
   max-width: 1200px; margin: 1rem auto 0; padding: 1rem 1.2rem 2.5rem;
   border-top: 1px solid var(--card-border); color: var(--text-2); font-size: 0.9rem;
@@ -132,6 +159,21 @@ footer.page-foot a { color: #C06828; }
   <div id="chart"></div>
   <div id="tooltip" role="tooltip"></div>
 </div>
+<section class="column-box">
+  <p class="column-label">コラム</p>
+  <h2 class="column-title">人口が減ると、町の収入はどうなる？</h2>
+  <p>図の左側でいちばん太い帯「地方交付税」（72億5,000万円・歳入の42.3%）は、国から町に配分されるお金です。</p>
+  <p>この金額は、ざっくり言うと次の引き算で決まっています。</p>
+  <p class="column-formula">町の運営に必要なお金（国が計算） − 町税などの収入 × 75%</p>
+  <p>そして「町の運営に必要なお金」の多くは、人口をもとに計算されています。消防、福祉、保健衛生などの費用が「人口1人あたり○円」という形で積み上げられているためです。</p>
+  <p>つまり、人口が減ると、税収が減るだけでなく、この交付税も減っていきます。人口減少は町の財政に二重に効いてくるのです。</p>
+  <p>なお、計算に使われる人口は5年に1度の国勢調査の人口です。住民が増減してもすぐに反映されるわけではなく、国勢調査のたびにまとめて影響が現れます。</p>
+  <p>これが、議会で「人口減少」が繰り返し議論される理由のひとつです。</p>
+  <p class="column-links">
+    <a href="index.html#population">→ 町の人口の動きはこちら</a>
+    <a href="search.html?q=%E4%BA%BA%E5%8F%A3">→ 議会での人口減少の議論を見る</a>
+  </p>
+</section>
 <footer class="page-foot">
   <p>出典: <a id="src-link" href="#" target="_blank" rel="noopener">周防大島町 令和8年度当初予算の概要（PDF）</a><br>
   <span id="note" style="font-size:0.85rem;color:var(--muted)"></span></p>

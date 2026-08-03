@@ -195,6 +195,15 @@ def page(title: str, body: str, root: str = ".", active: str = "",
     <p class="source">原文の会議録: <a href="https://www.town.suo-oshima.lg.jp/site/gikai/list18-56.html">周防大島町議会 会議録一覧</a></p>
   </div>
 </footer>
+<script>
+// Webフォント読み込みでレイアウトが変わるため、フォント確定後にアンカー位置へ再スクロール
+if (location.hash) {{
+  document.fonts.ready.then(() => {{
+    const el = document.querySelector(location.hash);
+    if (el) el.scrollIntoView();
+  }});
+}}
+</script>
 </body>
 </html>"""
 
@@ -355,7 +364,7 @@ def build_population_section() -> str:
               f"{ref[:4]}年{int(ref[5:7])}月")
     src_pdf = latest.get("_pdf_url", KOUHOU_BACKNUMBER_URL)
 
-    return f"""<section>
+    return f"""<section id="population">
   <h2>周防大島町の今</h2>
   <p class="section-lead">町の「人口」「お金」を、議会の話題とあわせてどうぞ。</p>
   <div class="stats pop-stats">
@@ -592,6 +601,13 @@ function render() {{
 }}
 fetch("data/questions.json").then(r => r.json()).then(data => {{
   QUESTIONS = data;
+  // URLパラメータで初期絞り込み（例: search.html?q=人口 / ?member=新田健介）
+  const params = new URLSearchParams(location.search);
+  if (params.get("q")) document.getElementById("keyword").value = params.get("q");
+  const pm = params.get("member");
+  if (pm && [...document.getElementById("member").options].some(o => o.value === pm)) {{
+    document.getElementById("member").value = pm;
+  }}
   render();
   setupChips();
 }});
