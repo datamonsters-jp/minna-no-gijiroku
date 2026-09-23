@@ -2,8 +2,8 @@
   "pages": {
     "https://www.town.suo-oshima.lg.jp/site/gikai/2146.html": {
       "title": "議会会議録",
-      "updated": "2026年6月12日更新",
-      "checked_at": "2026-07-03T01:13:38Z"
+      "updated": "2026年8月27日更新",
+      "checked_at": "2026-09-23T15:48:24Z"
     },
     "https://www.town.suo-oshima.lg.jp/site/gikai/15586.html": {
       "title": "令和8年 本会議　第1回定例会会議録",
@@ -759,6 +759,11 @@
       "title": "平成16年 本会議　第1回臨時会",
       "updated": "2004年11月26日更新",
       "checked_at": "2026-07-03T01:42:46Z"
+    },
+    "https://www.town.suo-oshima.lg.jp/site/gikai/16256.html": {
+      "title": "令和8年 本会議　第2回定例会会議録",
+      "updated": "2026年8月27日更新",
+      "checked_at": "2026-09-23T15:48:35Z"
     }
   },
   "pdfs": {
@@ -4721,6 +4726,38 @@
       "page_title": "平成16年 本会議　第1回臨時会",
       "size_bytes": 457367,
       "downloaded_at": "2026-07-03T01:42:46Z"
+    },
+    "https://www.town.suo-oshima.lg.jp/uploaded/attachment/23963.pdf": {
+      "filename": "令和8年_第2回定例会_目次.pdf",
+      "link_text": "令和8年第2回定例会（目次） [PDFファイル／153KB]",
+      "page_url": "https://www.town.suo-oshima.lg.jp/site/gikai/16256.html",
+      "page_title": "令和8年 本会議　第2回定例会会議録",
+      "size_bytes": 156044,
+      "downloaded_at": "2026-09-23T15:48:28Z"
+    },
+    "https://www.town.suo-oshima.lg.jp/uploaded/attachment/23964.pdf": {
+      "filename": "令和8年_第2回定例会_1日目.pdf",
+      "link_text": "令和8年第2回定例会（第1日） [PDFファイル／926KB]",
+      "page_url": "https://www.town.suo-oshima.lg.jp/site/gikai/16256.html",
+      "page_title": "令和8年 本会議　第2回定例会会議録",
+      "size_bytes": 948052,
+      "downloaded_at": "2026-09-23T15:48:31Z"
+    },
+    "https://www.town.suo-oshima.lg.jp/uploaded/attachment/23965.pdf": {
+      "filename": "令和8年_第2回定例会_2日目.pdf",
+      "link_text": "令和8年第2回定例会（第2日） [PDFファイル／1015KB]",
+      "page_url": "https://www.town.suo-oshima.lg.jp/site/gikai/16256.html",
+      "page_title": "令和8年 本会議　第2回定例会会議録",
+      "size_bytes": 1039148,
+      "downloaded_at": "2026-09-23T15:48:33Z"
+    },
+    "https://www.town.suo-oshima.lg.jp/uploaded/attachment/23966.pdf": {
+      "filename": "令和8年_第2回定例会_3日目.pdf",
+      "link_text": "令和8年第2回定例会（第3日） [PDFファイル／595KB]",
+      "page_url": "https://www.town.suo-oshima.lg.jp/site/gikai/16256.html",
+      "page_title": "令和8年 本会議　第2回定例会会議録",
+      "size_bytes": 608836,
+      "downloaded_at": "2026-09-23T15:48:35Z"
     }
   }
 }
