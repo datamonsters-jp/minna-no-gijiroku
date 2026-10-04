@@ -19,6 +19,15 @@ class SiteRegressionTests(unittest.TestCase):
                 self.assertTrue(any(g['結果'] == '不明' for g in data['議案結果']))
         self.assertEqual(len(reports),6)
 
+    def test_insurance_payment_timing(self):
+        data = json.loads((ROOT/'data/summaries/令和8年_第2回定例会_3日目.json').read_text())
+        summary = next(g['要約'] for g in data['議題要約'] if '報告第５号・第６号' in g['議題'])
+        self.assertIn('１件目（報告第５号）は令和８年６月２４日に全額支払済み', summary)
+        self.assertIn('２件目（報告第６号）は会議時点では未払い', summary)
+        self.assertIn('令和８年６月中に全額支払われる予定', summary)
+        self.assertNotIn('いずれも賠償額は保険', summary)
+        self.assertIn(summary, (ROOT/'docs/kaigi/y2026-teirei-2.html').read_text())
+
     def test_rendered_notices_and_date(self):
         for p in (ROOT/'docs').rglob('*.html'):
             h=p.read_text(); self.assertIn('class="ai-notice"',h,p)
