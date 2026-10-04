@@ -186,6 +186,7 @@ def page(title: str, body: str, root: str = ".", active: str = "",
   <nav><a href="{root}/index.html"{nav_home}>ホーム</a><a href="{root}/search.html"{nav_search}>一般質問をさがす</a><a href="{root}/budget.html">予算のながれ</a></nav>
 </header>
 <main>
+<p class="ai-notice"><strong>AI要約・非公式サイト</strong>です。正確な内容は<a href="https://www.town.suo-oshima.lg.jp/site/gikai/list18-56.html">原文の会議録</a>をご確認ください。</p>
 {body}
 </main>
 <footer class="site-footer">
@@ -431,7 +432,7 @@ def build_top(sessions) -> str:
   <div class="stat-card"><p class="stat-label">公開済みの会期</p><p class="stat-num orange">{len(sessions)}<span class="stat-unit">会期</span></p></div>
   <div class="stat-card"><p class="stat-label">直近の会議</p><p class="stat-num small">{esc(latest['title'])}</p></div>
   <div class="stat-card"><p class="stat-label">一般質問</p><p class="stat-num green">{total_q}<span class="stat-unit">件</span></p></div>
-  <div class="stat-card"><p class="stat-label">最終更新</p><p class="stat-num small">{esc(last_update)}</p></div>
+  <div class="stat-card"><p class="stat-label">最新の会議日</p><p class="stat-num small">{esc(last_update)}</p></div>
 </section>
 <section>
   <h2>よく議論されているテーマ</h2>
@@ -644,6 +645,8 @@ function setupChips() {{
 
 
 STYLE = """/* みんなの議事録 周防大島 — design_handoff_gijiroku 準拠 */
+.ai-notice { margin: 1rem 0; padding: 0.7rem 1rem; border-left: 3px solid #4A8C5C; background: #F3F5EE; font-size: 0.9rem; line-height: 1.7; }
+.ai-notice a { text-decoration: underline; }
 :root {
   --orange: #E8873C;
   --orange-dark: #D47830;

@@ -1,4 +1,6 @@
 /* みんなの議事録 周防大島 — design_handoff_gijiroku 準拠 */
+.ai-notice { margin: 1rem 0; padding: 0.7rem 1rem; border-left: 3px solid #4A8C5C; background: #F3F5EE; font-size: 0.9rem; line-height: 1.7; }
+.ai-notice a { text-decoration: underline; }
 :root {
   --orange: #E8873C;
   --orange-dark: #D47830;
