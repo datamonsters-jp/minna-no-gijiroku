@@ -9,6 +9,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+.ai-notice { margin: 1rem 20px; padding: 0.7rem 1rem; border-left: 3px solid #4A8C5C; background: #F3F5EE; font-size: 0.9rem; line-height: 1.7; }
+.ai-notice a { text-decoration: underline; }
 :root {
   --orange: #E8873C;
   --divider: #E8DFD0;
@@ -144,6 +146,7 @@ footer.page-foot a { color: #C06828; }
   </a>
   <nav><a href="index.html">ホーム</a><a href="search.html">一般質問をさがす</a><a href="budget.html" class="active">予算のながれ</a></nav>
 </header>
+<p class="ai-notice"><strong>非公式サイト</strong>です。会議録の要約にはAIを使用しています。予算の正確な内容は<a href="#src-link">出典の公式資料</a>をご確認ください。</p>
 <header class="page-head">
   <h1 id="title">当初予算 お金の流れ</h1>
   <p class="subtitle" id="subtitle"></p>
@@ -209,8 +212,19 @@ const chart = document.getElementById("chart");
 const tooltip = document.getElementById("tooltip");
 let pinned = null;   // タップで固定表示中のノードkey
 
+function hideTooltip() {
+  tooltip.style.display = "none";
+  pinned = null;
+}
+// Register once for the page, not once per render or once per click.
+document.addEventListener("click", hideTooltip);
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") hideTooltip();
+});
+
 function render() {
   if (!BUDGET) return;
+  hideTooltip();
   const total = BUDGET.meta.total_man;
   const W = chart.clientWidth;
   const narrow = W < 640;
@@ -387,7 +401,7 @@ function render() {
     tooltip.style.left = Math.max(4, x) + "px";
     tooltip.style.top = y + "px";
   };
-  const hide = () => { tooltip.style.display = "none"; pinned = null; };
+  const hide = hideTooltip;
 
   chart.querySelectorAll("rect[data-key], .ribbon").forEach(el => {
     const n = nodeBy[el.dataset.key];
@@ -400,7 +414,6 @@ function render() {
       pinned = n.key; show(n, e);
     });
   });
-  document.addEventListener("click", hide, { once: true });
 }
 
 function getCss(name) {
